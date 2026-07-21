@@ -158,16 +158,24 @@ export const BotPerformanceView = ({
       return b.netProfit * multiplier;
     };
 
+    // Helper to calculate initial capital (Deposit = Balance - Net Profit)
+    const getInitialCapital = (b) => {
+      const capital = b.capital || 0;
+      const netProfit = b.netProfit || 0;
+      const initial = capital - netProfit;
+      return initial > 0 ? initial : (capital || 1);
+    };
+
     // Group totals by currency
     const usdPool = runningBots.filter(b => !(b.currency === 'USC' || b.currency === 'CENT' || (b.currency && b.currency.toLowerCase().includes('cent'))));
     const centPool = runningBots.filter(b => b.currency === 'USC' || b.currency === 'CENT' || (b.currency && b.currency.toLowerCase().includes('cent')));
 
     const usdPnl = usdPool.reduce((sum, b) => sum + getPnlForBot(b), 0);
-    const usdCapital = usdPool.reduce((sum, b) => sum + (b.capital || 1), 0);
+    const usdCapital = usdPool.reduce((sum, b) => sum + getInitialCapital(b), 0);
     const usdPct = (usdPnl / usdCapital) * 100;
 
     const centPnl = centPool.reduce((sum, b) => sum + getPnlForBot(b), 0);
-    const centCapital = centPool.reduce((sum, b) => sum + (b.capital || 1), 0);
+    const centCapital = centPool.reduce((sum, b) => sum + getInitialCapital(b), 0);
     const centPct = (centPnl / centCapital) * 100;
 
     let profitSummaryText = '';
@@ -187,8 +195,8 @@ export const BotPerformanceView = ({
       const isCent = b.currency === 'USC' || b.currency === 'CENT' || (b.currency && b.currency.toLowerCase().includes('cent'));
       const pnlFormatted = isCent ? `${Math.floor(botPnl).toLocaleString()} USC` : `$${Math.floor(botPnl).toLocaleString()}`;
       
-      const botCapital = b.capital || 1;
-      const profitPercent = (botPnl / botCapital) * 100;
+      const botInitialCapital = getInitialCapital(b);
+      const profitPercent = (botPnl / botInitialCapital) * 100;
       const pctSign = profitPercent >= 0 ? '+' : '';
 
       return `• ${b.name} (${b.pair}): ${pnlSign}${pnlFormatted} (${pctSign}${profitPercent.toFixed(1)}%)`;

@@ -31,10 +31,25 @@ export const DashboardView = ({
   const selectedBot = activeBotId === 'all' ? null : runningBots.find(b => b.id === activeBotId);
 
   // 1. Profit Today display
+  // Helper to calculate initial capital (Deposit = Balance - Net Profit)
+  const getInitialCapital = (b) => {
+    const capital = b.capital || 0;
+    const netProfit = b.netProfit || 0;
+    const initial = capital - netProfit;
+    return initial > 0 ? initial : (capital || 1);
+  };
+
+  // 1. Profit Today display
   const profitToday = selectedBot 
     ? (selectedBot.isMt5 ? (selectedBot.netProfitDay ?? 0) : selectedBot.profit)
     : runningBots.reduce((sum, b) => sum + (b.isMt5 ? (b.netProfitDay ?? 0) : b.profit), 0);
   const isProfitPositive = profitToday >= 0;
+
+  const initialCapital = selectedBot 
+    ? getInitialCapital(selectedBot)
+    : runningBots.reduce((sum, b) => sum + getInitialCapital(b), 0);
+
+  const profitPercentToday = (profitToday / initialCapital) * 100;
 
   // 2. Win Rate display
   const winRate = selectedBot ? selectedBot.winRate : 72.4;
@@ -62,7 +77,7 @@ export const DashboardView = ({
             </div>
             <div className={`stat-sub ${isProfitPositive ? 'text-success' : 'text-danger'}`}>
               <TrendUpIcon size={12} className={isProfitPositive ? '' : 'trend-down'} />
-              <span>{isProfitPositive ? '+4.2%' : '-1.5%'} hôm nay</span>
+              <span>{profitPercentToday >= 0 ? '+' : ''}{profitPercentToday.toFixed(2)}% hôm nay</span>
             </div>
           </div>
           <div 
