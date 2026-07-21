@@ -2,9 +2,10 @@
 title Vite Dev Server - KN ProTrader
 color 0E
 echo.
-echo  Vite Dev Server starting on http://localhost:5173
+echo  Vite Dev Server starting on http://localhost (Port 80)
 echo  Close this window to stop.
 echo.
 cd /d "%~dp0"
+set "PATH=%PATH%;C:\Program Files\nodejs"
 npm run dev
 pause

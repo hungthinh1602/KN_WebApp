@@ -1,5 +1,6 @@
 @echo off
 setlocal
+set "PATH=%PATH%;C:\Program Files\nodejs"
 title KN ProTrader Launcher
 color 0A
 cls
@@ -50,11 +51,11 @@ echo  Waiting 6 seconds...
 timeout /t 6 /nobreak >nul
 
 echo  Opening browser...
-start "" "http://localhost:5173"
+start "" "http://localhost"
 
 echo.
 echo  ============================================================
-echo   DONE!  Web: http://localhost:5173
+echo   DONE!  Web: http://localhost
 echo   To stop: close the two black windows.
 echo  ============================================================
 echo.
