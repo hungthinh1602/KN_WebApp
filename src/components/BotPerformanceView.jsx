@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   TrendUpIcon, 
   WalletIcon, 
@@ -80,7 +80,25 @@ export const BotPerformanceView = ({
   // Timeframe filter state: 'day', 'week', 'month'
   const [timeFilter, setTimeFilter] = useState('week');
 
-  const tgConfig = JSON.parse(localStorage.getItem('protrader_telegram_config') || '{"token":"","chatId":"","botChatId":"","autoSend":false}');
+  const [tgConfig, setTgConfig] = useState(() => {
+    return JSON.parse(localStorage.getItem('protrader_telegram_config') || '{"token":"","chatId":"","botChatId":"","autoSend":false}');
+  });
+
+  useEffect(() => {
+    const fetchTgConfig = async () => {
+      try {
+        const res = await fetch('/api/telegram-config');
+        if (res.ok) {
+          const data = await res.json();
+          setTgConfig(data);
+          localStorage.setItem('protrader_telegram_config', JSON.stringify(data));
+        }
+      } catch (err) {
+        console.warn("Failed to load telegram config from server:", err);
+      }
+    };
+    fetchTgConfig();
+  }, []);
 
   const sendTelegramNotification = async (text, customChatId) => {
     const targetChat = customChatId || tgConfig.botChatId || tgConfig.chatId;

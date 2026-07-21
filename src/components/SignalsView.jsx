@@ -111,6 +111,23 @@ export const SignalsView = ({ searchTerm, userRole }) => {
     return saved ? JSON.parse(saved) : { token: '', chatId: '', botChatId: '', autoSend: false };
   });
 
+  // Load telegram configuration from server on mount
+  useEffect(() => {
+    const fetchTgConfig = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/telegram-config`);
+        if (res.ok) {
+          const data = await res.json();
+          setTgConfig(data);
+          localStorage.setItem('protrader_telegram_config', JSON.stringify(data));
+        }
+      } catch (err) {
+        console.warn("Failed to load telegram config from server:", err);
+      }
+    };
+    fetchTgConfig();
+  }, []);
+
   const [showTgSettings, setShowTgSettings] = useState(false);
 
   const showToast = (msg) => {
@@ -1168,9 +1185,18 @@ Lệnh đã bị HỦY. Vui lòng chờ tín hiệu sau!
                   type="button" 
                   className="btn btn-primary" 
                   style={{ height: '34px', padding: '0 16px', fontSize: '12px', fontWeight: '700' }}
-                  onClick={() => {
+                  onClick={async () => {
                     localStorage.setItem('protrader_telegram_config', JSON.stringify(tgConfig));
-                    showToast("💾 Đã lưu cấu hình Telegram Bot!");
+                    try {
+                      await fetch(`${API_BASE_URL}/api/telegram-config`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(tgConfig)
+                      });
+                      showToast("💾 Đã lưu cấu hình Telegram Bot!");
+                    } catch (err) {
+                      alert("⚠️ Không thể lưu cấu hình lên máy chủ trung tâm!");
+                    }
                     setShowTgSettings(false);
                   }}
                 >

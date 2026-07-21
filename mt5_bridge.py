@@ -207,6 +207,18 @@ class MT5BridgeHandler(BaseHTTPRequestHandler):
                 self._json({"success": False, "error": str(e)}, 500)
             return
 
+        if path == "/api/telegram-config":
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode("utf-8"))
+                with open("telegram_config.json", "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+                self._json({"success": True})
+            except Exception as e:
+                self._json({"success": False, "error": str(e)}, 500)
+            return
+
         if path != "/api/connect":
             self._json({"error": "Not Found"}, 404)
             return
@@ -319,6 +331,19 @@ class MT5BridgeHandler(BaseHTTPRequestHandler):
                     self._json({"error": str(e)}, 500)
             else:
                 self._json([])
+            return
+
+        # GET /api/telegram-config
+        if path == "/api/telegram-config":
+            if os.path.exists("telegram_config.json"):
+                try:
+                    with open("telegram_config.json", "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    self._json(data)
+                except Exception as e:
+                    self._json({"error": str(e)}, 500)
+            else:
+                self._json({"token": "", "chatId": "", "botChatId": "", "autoSend": False})
             return
 
         # GET /api/price
