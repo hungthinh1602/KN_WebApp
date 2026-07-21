@@ -127,27 +127,25 @@ function App() {
   const [basePortfolioValue, setBasePortfolioValue] = useState(142504.22);
   const [portfolioValue, setPortfolioValue] = useState(142504.22);
 
-  // Persistence: Save bots database to localStorage & Central Server when modified
+  // Persistence: Save bots database to localStorage when modified client-side
   useEffect(() => {
     localStorage.setItem('protrader_bots', JSON.stringify(runningBots));
-    
-    const botsStr = JSON.stringify(runningBots);
-    if (botsStr === lastSavedBotsRef.current) return; // Skip POST if no changes
-    
-    const saveBotsToServer = async () => {
-      try {
-        await fetch(`${API_BASE_URL}/api/bots`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: botsStr
-        });
-        lastSavedBotsRef.current = botsStr;
-      } catch (err) {
-        console.warn("Failed to save bots to central server:", err);
-      }
-    };
-    saveBotsToServer();
   }, [runningBots]);
+
+  // Helper to save bots list to the central VPS server database
+  const saveBotsToServer = async (updatedBots) => {
+    try {
+      const botsStr = JSON.stringify(updatedBots);
+      await fetch(`${API_BASE_URL}/api/bots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: botsStr
+      });
+      lastSavedBotsRef.current = botsStr;
+    } catch (err) {
+      console.warn("Failed to save bots to central server:", err);
+    }
+  };
 
   // Auto Reconnect: Handshake MT5 logins saved in database on Web App startup
   useEffect(() => {
@@ -256,8 +254,12 @@ function App() {
       // Cache locally
       localStorage.setItem(`mt5_cache_${bot.mt5Login}`, JSON.stringify(updatedFields));
 
-      // Update state
-      setRunningBots(prevBots => prevBots.map(b => b.id === bot.id ? { ...b, ...updatedFields } : b));
+      // Update state and save to server
+      setRunningBots(prevBots => {
+        const nextBots = prevBots.map(b => b.id === bot.id ? { ...b, ...updatedFields } : b);
+        saveBotsToServer(nextBots);
+        return nextBots;
+      });
       setMt5HistoryDeals(deals);
 
       // Update open positions
@@ -345,6 +347,7 @@ function App() {
 
         const updatedBots = [mt5Bot, ...runningBots];
         setRunningBots(updatedBots);
+        saveBotsToServer(updatedBots);
         setActiveBotId(mt5Bot.id); // Automatically switch focus to the new MT5 bot!
         setActiveTab('dashboard');
 
@@ -372,6 +375,7 @@ function App() {
 
       const updatedBots = [completedBot, ...runningBots];
       setRunningBots(updatedBots);
+      saveBotsToServer(updatedBots);
       setActiveBotId(completedBot.id); // Automatically switch focus to the new bot!
 
       const timeNow = new Date().toLocaleTimeString('vi-VN', { hour12: false });
@@ -394,7 +398,9 @@ function App() {
   // Handler to delete bot configurations from database
   const handleDeleteBot = (botId) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa Bot/Tài khoản này khỏi danh sách lưu trữ?")) {
-      setRunningBots(prev => prev.filter(b => b.id !== botId));
+      const updatedBots = runningBots.filter(b => b.id !== botId);
+      setRunningBots(updatedBots);
+      saveBotsToServer(updatedBots);
       if (activeBotId === botId) {
         setActiveBotId('all');
       }

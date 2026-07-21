@@ -433,27 +433,25 @@ ${signalEmoji} Signal: ${signalTypeStr}
     return () => clearInterval(interval);
   }, []);
 
-  // Save signals to localStorage & Central Server when modified
+  // Save signals to localStorage when modified client-side
   useEffect(() => {
     localStorage.setItem('protrader_community_signals', JSON.stringify(signals));
-    
-    const signalsStr = JSON.stringify(signals);
-    if (signalsStr === lastSavedSignalsRef.current) return; // Skip if unchanged
-    
-    const saveSignalsToServer = async () => {
-      try {
-        await fetch(`${API_BASE_URL}/api/signals`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: signalsStr
-        });
-        lastSavedSignalsRef.current = signalsStr;
-      } catch (err) {
-        console.warn("Failed to save signals to central server:", err);
-      }
-    };
-    saveSignalsToServer();
   }, [signals]);
+
+  // Helper to save signals list to the central VPS server database
+  const saveSignalsToServer = async (updatedSignals) => {
+    try {
+      const signalsStr = JSON.stringify(updatedSignals);
+      await fetch(`${API_BASE_URL}/api/signals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: signalsStr
+      });
+      lastSavedSignalsRef.current = signalsStr;
+    } catch (err) {
+      console.warn("Failed to save signals to central server:", err);
+    }
+  };
 
   // 3. New Signal Form State
   const [assetInput, setAssetInput] = useState('XAUUSD (CFD)');
@@ -687,6 +685,7 @@ ${signalEmoji} Signal: ${sig.type} (${statusLabel})
     if (databaseModified) {
       setSignals(checkedSignals);
       localStorage.setItem('protrader_community_signals', JSON.stringify(checkedSignals));
+      saveSignalsToServer(checkedSignals);
     }
   }, [prices, signals]);
 
@@ -849,6 +848,7 @@ ${signalEmoji} Signal: ${sig.type} (${statusLabel})
     const updated = [newSignal, ...signals];
     setSignals(updated);
     localStorage.setItem('protrader_community_signals', JSON.stringify(updated));
+    saveSignalsToServer(updated);
     
     // Auto-send new signals to Telegram if configured
     if ((newSignal.status === 'RUNNING' || newSignal.status === 'PENDING') && tgConfig.autoSend && tgConfig.token && tgConfig.chatId) {
@@ -962,6 +962,7 @@ ${signalEmoji} Signal: ${sig.type} (CLOSED EARLY)
 
     setSignals(updated);
     localStorage.setItem('protrader_community_signals', JSON.stringify(updated));
+    saveSignalsToServer(updated);
   };
 
   // Delete signal
@@ -989,6 +990,7 @@ Lệnh đã bị HỦY. Vui lòng chờ tín hiệu sau!
       const updated = signals.filter(sig => sig.id !== sigId);
       setSignals(updated);
       localStorage.setItem('protrader_community_signals', JSON.stringify(updated));
+      saveSignalsToServer(updated);
     }
   };
 
