@@ -310,8 +310,8 @@ ${signalEmoji} Signal: ${s.type}
     const dateLabel = timeframe === 'day' 
       ? todayDateStr 
       : timeframe === 'week' 
-        ? `${sevenDaysAgo.toISOString().split('T')[0]} tới ${todayDateStr}` 
-        : `${currentYearMonth}`;
+        ? `${startOfWeek.toISOString().split('T')[0]} tới ${todayDateStr}` 
+        : `${startOfMonth.toISOString().split('T')[0]} tới ${todayDateStr}`;
 
     const text = `📊 [BÁO CÁO HIỆU SUẤT ${titleLabel}]
 Thời gian: ${dateLabel}
