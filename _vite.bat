@@ -6,7 +6,6 @@ echo  Vite Dev Server starting on http://localhost (Port 80)
 echo  Close this window to stop.
 echo.
 cd /d "%~dp0"
-set "CLEAN_PATH=%PATH:"=%"
-set "PATH=%CLEAN_PATH%;C:\Program Files\nodejs;C:\Program Files\Git\cmd"
+set "PATH=C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files\nodejs;C:\Program Files\Git\cmd"
 npm run dev
 pause

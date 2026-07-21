@@ -1,7 +1,6 @@
 @echo off
 setlocal
-set "CLEAN_PATH=%PATH:"=%"
-set "PATH=%CLEAN_PATH%;C:\Program Files\nodejs;C:\Program Files\Python312;C:\Program Files\Python312\Scripts;C:\Program Files\Git\cmd"
+set "PATH=C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files\nodejs;C:\Program Files\Python312;C:\Program Files\Python312\Scripts;C:\Program Files\Git\cmd"
 title KN ProTrader Launcher
 color 0A
 cls
