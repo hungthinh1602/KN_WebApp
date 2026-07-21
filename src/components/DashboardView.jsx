@@ -31,7 +31,9 @@ export const DashboardView = ({
   const selectedBot = activeBotId === 'all' ? null : runningBots.find(b => b.id === activeBotId);
 
   // 1. Profit Today display
-  const profitToday = selectedBot ? selectedBot.profit : 1240.55;
+  const profitToday = selectedBot 
+    ? (selectedBot.isMt5 ? (selectedBot.netProfitDay ?? 0) : selectedBot.profit)
+    : runningBots.reduce((sum, b) => sum + (b.isMt5 ? (b.netProfitDay ?? 0) : b.profit), 0);
   const isProfitPositive = profitToday >= 0;
 
   // 2. Win Rate display
@@ -166,8 +168,8 @@ export const DashboardView = ({
                             {bot.status}
                           </span>
                         </td>
-                        <td className={`text-mono ${bot.profit >= 0 ? 'text-success' : 'text-danger'}`} style={{ textAlign: 'right', fontWeight: '700' }}>
-                          {bot.profit >= 0 ? '+' : ''}{formatCurrency(bot.profit, bot.currency)}
+                        <td className={`text-mono ${(bot.isMt5 ? (bot.netProfit ?? 0) : bot.profit) >= 0 ? 'text-success' : 'text-danger'}`} style={{ textAlign: 'right', fontWeight: '700' }}>
+                          {(bot.isMt5 ? (bot.netProfit ?? 0) : bot.profit) >= 0 ? '+' : ''}{formatCurrency(bot.isMt5 ? (bot.netProfit ?? 0) : bot.profit, bot.currency)}
                         </td>
                       </tr>
                     );

@@ -228,11 +228,19 @@ function App() {
       const avgProfit = totalDeals > 0 ? totalNetProfit / totalDeals : 0.0;
 
       const now = new Date();
-      const oneDay = 24 * 60 * 60 * 1000;
       
-      const dealsDay = deals.filter(d => (now - new Date(d.time)) <= oneDay);
-      const dealsWeek = deals.filter(d => (now - new Date(d.time)) <= 7 * oneDay);
-      const dealsMonth = deals.filter(d => (now - new Date(d.time)) <= 30 * oneDay);
+      // Calendar-based timeframes (local time)
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      const currentDayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      const daysSinceMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+      const startOfThisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceMonday);
+      
+      const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      const dealsDay = deals.filter(d => new Date(d.time) >= startOfToday);
+      const dealsWeek = deals.filter(d => new Date(d.time) >= startOfThisWeek);
+      const dealsMonth = deals.filter(d => new Date(d.time) >= startOfThisMonth);
 
       const netProfitDay = dealsDay.reduce((sum, d) => sum + d.profit, 0);
       const netProfitWeek = dealsWeek.reduce((sum, d) => sum + d.profit, 0);

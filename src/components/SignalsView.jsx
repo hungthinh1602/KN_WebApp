@@ -218,9 +218,15 @@ ${signalEmoji} Signal: ${s.type}
     const todayDateStr = now.toISOString().split('T')[0];
     const currentYearMonth = todayDateStr.substring(0, 7);
 
-    // Calculate start date for week (last 7 days)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Calculate calendar start of week (Monday 00:00:00 local time)
+    const currentDayOfWeek = now.getDay();
+    const daysSinceMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceMonday);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // Calculate calendar start of month (1st 00:00:00 local time)
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    startOfMonth.setHours(0, 0, 0, 0);
 
     // Filter signals by timeframe
     const filtered = signals.filter(sig => {
@@ -228,9 +234,9 @@ ${signalEmoji} Signal: ${s.type}
       if (timeframe === 'day') {
         return sig.date === todayDateStr;
       } else if (timeframe === 'week') {
-        return sigDate >= sevenDaysAgo && sigDate <= now;
+        return sigDate >= startOfWeek && sigDate <= now;
       } else if (timeframe === 'month') {
-        return sig.date.startsWith(currentYearMonth);
+        return sigDate >= startOfMonth && sigDate <= now;
       }
       return false;
     });

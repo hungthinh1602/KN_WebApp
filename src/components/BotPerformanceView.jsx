@@ -138,25 +138,35 @@ export const BotPerformanceView = ({
 
     if (timeFilter === 'week') {
       title = '🤖 [BÁO CÁO HIỆU SUẤT TUẦN KN TRADING BOT]';
-      const pastDate = new Date();
-      pastDate.setDate(today.getDate() - 7);
-      timeRangeStr = `${formatDate(pastDate)} - ${todayStr}`;
+      const currentDayOfWeek = today.getDay();
+      const daysSinceMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+      const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysSinceMonday);
+      timeRangeStr = `${formatDate(monday)} - ${todayStr}`;
     } else if (timeFilter === 'month') {
       title = '🤖 [BÁO CÁO HIỆU SUẤT THÁNG KN TRADING BOT]';
-      const pastDate = new Date();
-      pastDate.setDate(today.getDate() - 30);
-      timeRangeStr = `${formatDate(pastDate)} - ${todayStr}`;
+      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      timeRangeStr = `${formatDate(firstDayOfMonth)} - ${todayStr}`;
     }
+
+    // Helper to calculate PnL based on timeframe and bot type
+    const getPnlForBot = (b) => {
+      if (b.isMt5) {
+        if (timeFilter === 'day') return b.netProfitDay !== undefined ? b.netProfitDay : b.profit;
+        if (timeFilter === 'week') return b.netProfitWeek !== undefined ? b.netProfitWeek : b.netProfit;
+        if (timeFilter === 'month') return b.netProfitMonth !== undefined ? b.netProfitMonth : b.netProfit;
+      }
+      return b.netProfit * multiplier;
+    };
 
     // Group totals by currency
     const usdPool = runningBots.filter(b => !(b.currency === 'USC' || b.currency === 'CENT' || (b.currency && b.currency.toLowerCase().includes('cent'))));
     const centPool = runningBots.filter(b => b.currency === 'USC' || b.currency === 'CENT' || (b.currency && b.currency.toLowerCase().includes('cent')));
 
-    const usdPnl = usdPool.reduce((sum, b) => sum + (b.netProfit * multiplier), 0);
+    const usdPnl = usdPool.reduce((sum, b) => sum + getPnlForBot(b), 0);
     const usdCapital = usdPool.reduce((sum, b) => sum + (b.capital || 1), 0);
     const usdPct = (usdPnl / usdCapital) * 100;
 
-    const centPnl = centPool.reduce((sum, b) => sum + (b.netProfit * multiplier), 0);
+    const centPnl = centPool.reduce((sum, b) => sum + getPnlForBot(b), 0);
     const centCapital = centPool.reduce((sum, b) => sum + (b.capital || 1), 0);
     const centPct = (centPnl / centCapital) * 100;
 
@@ -172,7 +182,7 @@ export const BotPerformanceView = ({
     const activeBotsCount = runningBots.filter(b => b.status === 'RUNNING').length;
 
     const botDetails = runningBots.map(b => {
-      const botPnl = b.netProfit * multiplier;
+      const botPnl = getPnlForBot(b);
       const pnlSign = botPnl >= 0 ? '+' : '';
       const isCent = b.currency === 'USC' || b.currency === 'CENT' || (b.currency && b.currency.toLowerCase().includes('cent'));
       const pnlFormatted = isCent ? `${Math.floor(botPnl).toLocaleString()} USC` : `$${Math.floor(botPnl).toLocaleString()}`;
