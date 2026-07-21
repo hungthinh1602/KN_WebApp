@@ -22,7 +22,7 @@ if %errorlevel% neq 0 (
 echo  [OK] Python found
 
 echo  [2/3] Checking Node.js...
-npm --version >nul 2>&1
+call npm --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo  [ERROR] Node.js not found in PATH! Please run setup_vps.bat first.
     pause & exit /b 1
@@ -32,7 +32,7 @@ echo  [OK] Node.js found
 echo  [3/3] Checking node_modules...
 if not exist "%~dp0node_modules" (
     echo  Running npm install...
-    npm install
+    call npm install
     if %errorlevel% neq 0 ( echo [ERROR] npm install failed! & pause & exit /b 1 )
 )
 echo  [OK] Dependencies ready
